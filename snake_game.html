@@ -789,53 +789,7 @@
             });
         }
         
-        // 保存分数到本地存储
-        function saveScoreToLocal(name, score) {
-            // 从localStorage获取现有分数
-            let scores = JSON.parse(localStorage.getItem('snakeLeaderboard')) || [];
-            
-            // 添加新分数
-            scores.push({
-                name: name,
-                score: score,
-                timestamp: new Date().toISOString()
-            });
-            
-            // 对同名用户去重，只保留最高分
-            const uniqueScores = [];
-            const nameMap = new Map();
-            
-            scores.forEach(item => {
-                const existingItem = nameMap.get(item.name);
-                if (!existingItem || item.score > existingItem.score) {
-                    nameMap.set(item.name, item);
-                }
-            });
-            
-            // 将Map转换为数组
-            nameMap.forEach(item => uniqueScores.push(item));
-            
-            // 按分数降序排序
-            uniqueScores.sort((a, b) => b.score - a.score);
-            
-            // 只保留前10名
-            const topScores = uniqueScores.slice(0, 10);
-            
-            // 保存回localStorage
-            localStorage.setItem('snakeLeaderboard', JSON.stringify(topScores));
-            
-            return topScores;
-        }
-        
-        // 从本地存储加载分数
-        function loadScoresFromLocal() {
-            let scores = JSON.parse(localStorage.getItem('snakeLeaderboard')) || [];
-            // 确保按分数降序排序
-            scores.sort((a, b) => b.score - a.score);
-            return scores;
-        }
-        
-        // 提交分数（优先尝试服务器，失败时使用本地存储）
+        // 提交分数到服务器
 function submitScore() {
     const name = document.getElementById('nameInput').value.trim();
     if (!name) {
@@ -849,9 +803,28 @@ function submitScore() {
     submitBtn.textContent = '保存中...';
     submitBtn.disabled = true;
     
-    try {
-        // 直接使用本地存储保存分数
-        const updatedScores = saveScoreToLocal(name, score);
+    // 创建JSON数据
+    const data = {
+        name: name,
+        score: score
+    };
+    
+    // 发送POST请求到服务器
+    fetch('/api/submit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('服务器响应错误');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('分数提交成功:', data);
         
         // 保存最后提交的用户名
         localStorage.setItem('snakeLastSubmittedName', name);
@@ -868,29 +841,57 @@ function submitScore() {
         resetGame();
         
         // 刷新排行榜显示
-        renderLeaderboard(updatedScores);
-    } catch (error) {
+        loadLeaderboard();
+    })
+    .catch(error => {
+        console.error('提交分数失败:', error);
         // 出错处理
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
         alert('保存失败: ' + error.message);
-    }
+    });
 }
         
-        // 加载排行榜数据
+        // 从服务器加载排行榜数据
         function loadLeaderboard() {
             const leaderboardList = document.getElementById('leaderboardList');
             
-            try {
-                // 从本地存储加载分数
-                const scores = loadScoresFromLocal();
-                
-                // 直接渲染排行榜，不添加默认数据
-                renderLeaderboard(scores);
-            } catch (error) {
-                console.error('加载排行榜失败:', error);
-                leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-rank">加载失败</span></li>';
-            }
+            // 显示加载状态
+            leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-rank">加载中...</span></li>';
+            
+            // 发送GET请求到服务器
+            fetch('/api/scores')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('服务器响应错误');
+                    }
+                    return response.json();
+                })
+                .then(scores => {
+                    // 对同名用户去重，只保留最高分
+                    const uniqueScores = [];
+                    const nameMap = new Map();
+                    
+                    scores.forEach(item => {
+                        const existingItem = nameMap.get(item.name);
+                        if (!existingItem || item.score > existingItem.score) {
+                            nameMap.set(item.name, item);
+                        }
+                    });
+                    
+                    // 将Map转换为数组
+                    nameMap.forEach(item => uniqueScores.push(item));
+                    
+                    // 按分数降序排序
+                    uniqueScores.sort((a, b) => b.score - a.score);
+                    
+                    // 渲染排行榜
+                    renderLeaderboard(uniqueScores);
+                })
+                .catch(error => {
+                    console.error('加载排行榜失败:', error);
+                    leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-rank">加载失败</span></li>';
+                });
         }
         // 渲染排行榜
         function renderLeaderboard(scores) {
