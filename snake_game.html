@@ -360,6 +360,54 @@
             backdrop-filter: blur(4px);
         }
         
+        /* 赞的特效动画 - 超级酷炫版本 */
+        .like-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            font-size: 400px;
+            color: #FFD700;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 1100;
+            pointer-events: none;
+            filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.8));
+            animation: likePop 2s ease-out forwards;
+        }
+        
+
+        
+        @keyframes likePop {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0);
+                filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.5);
+                filter: drop-shadow(0 0 50px rgba(255, 215, 0, 1));
+            }
+            30% {
+                transform: translate(-50%, -50%) scale(1.2);
+                filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.9));
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.3);
+                filter: drop-shadow(0 0 45px rgba(255, 215, 0, 0.95));
+            }
+            70% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+                filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.9));
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translateY(-100px) scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+            }
+        }
+        
         /* 响应式设计 */
         @media (max-width: 1024px) {
             .game-container {
@@ -459,6 +507,11 @@
     </div>
     
     <div class="overlay"></div>
+    
+    <!-- 赞的特效容器 -->
+    <div id="likeAnimationContainer" style="display: none;">
+        <div class="like-animation">👍</div>
+    </div>
     
     <div id="gameOver">
         <h2>游戏结束</h2>
@@ -619,15 +672,41 @@
                 highScoreElement.textContent = highScore;
             }
             
-            // 显示游戏结束界面
+            // 准备游戏结束界面数据
             finalScoreElement.textContent = score;
-            document.querySelector('.overlay').style.display = 'block';
-            gameOverElement.style.display = 'block';
-            
-            // 重置游戏结束界面状态
-            document.getElementById('nameInput').value = '';
+            const lastSubmittedName = localStorage.getItem('snakeLastSubmittedName');
+            document.getElementById('nameInput').value = lastSubmittedName || '';
             document.getElementById('submitScoreBtn').style.display = 'inline';
             document.getElementById('restartBtn').style.display = 'none';
+            
+            // 显示赞的特效动画
+            showLikeAnimation(() => {
+                // 动画结束后显示游戏结束界面
+                document.querySelector('.overlay').style.display = 'block';
+                gameOverElement.style.display = 'block';
+            });
+        }
+        
+        // 显示赞的特效动画
+        function showLikeAnimation(callback) {
+            const container = document.getElementById('likeAnimationContainer');
+            const animation = container.querySelector('.like-animation');
+            
+            // 重置动画
+            container.style.display = 'block';
+            animation.style.animation = 'none';
+            
+            // 强制重绘
+            void animation.offsetWidth;
+            
+            // 开始动画
+            animation.style.animation = 'likePop 2s ease-out forwards';
+            
+            // 动画结束后隐藏容器并执行回调
+            setTimeout(() => {
+                container.style.display = 'none';
+                if (callback) callback();
+            }, 2000);
         }
 
         // 开始游戏
@@ -773,6 +852,9 @@ function submitScore() {
     try {
         // 直接使用本地存储保存分数
         const updatedScores = saveScoreToLocal(name, score);
+        
+        // 保存最后提交的用户名
+        localStorage.setItem('snakeLastSubmittedName', name);
         
         // 显示成功消息
         submitBtn.textContent = originalText;
