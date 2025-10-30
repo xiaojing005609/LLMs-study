@@ -5,106 +5,255 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>风夏贪吃蛇 - 国风音乐主题</title>
     <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             text-align: center;
             background-color: #f9f2e8;
-            margin: 0;
+            background-image: linear-gradient(135deg, #f9f2e8 0%, #f0e6d2 100%);
+            min-height: 100vh;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
             padding: 20px;
-            font-family: Arial, sans-serif;
+            color: #5d4037;
         }
         
+        /* 标题样式 */
         h1 {
             color: #8a3a31;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 1px;
         }
         
+        /* 游戏容器 */
         .game-container {
             display: flex;
-            justify-content: center;
-            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 40px;
             margin: 0 auto;
-            max-width: 900px;
+            max-width: 1200px;
+            align-items: stretch;
+            width: 100%;
         }
         
+        /* 主游戏区域 */
         .game-main {
             display: flex;
             flex-direction: column;
             align-items: center;
+            background-color: rgba(245, 239, 224, 0.8);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            flex-grow: 1;
+            flex-shrink: 0;
         }
         
+        /* 游戏信息 */
         .game-info {
-            margin-bottom: 20px;
-            font-size: 18px;
+            margin-bottom: 25px;
+            font-size: 20px;
             color: #5d4037;
-        }
-        
-        canvas {
-            border: 2px solid #8a3a31;
-            background-color: #f5efe0;
-        }
-        
-        .controls {
-            margin-top: 20px;
-        }
-        
-        button {
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.7);
             padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #e0d4c0;
+        }
+        
+        /* 游戏画布 */
+        canvas {
+            border: 3px solid #8a3a31;
+            background-color: #f5efe0;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        canvas:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* 主控制按钮区域 */
+        .main-controls {
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        /* 控制按钮面板 */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 25px;
+            background-color: rgba(245, 239, 224, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+        
+        /* 按钮基础样式 */
+        button {
+            padding: 12px 24px;
             margin: 5px;
             font-size: 16px;
             background-color: #8a3a31;
             color: #f5efe0;
-            border: 1px solid #5d4037;
-            border-radius: 4px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(138, 58, 49, 0.3);
         }
         
         button:hover {
             background-color: #a14a41;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(138, 58, 49, 0.4);
         }
         
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(138, 58, 49, 0.3);
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* 方向按钮 */
         .direction-btn {
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
+            width: 70px;
+            height: 70px;
+            font-size: 28px;
             background-color: #b35e58;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px;
         }
         
+        /* 方向控制区域 */
+        .direction-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .direction-btn:hover {
+            background-color: #c67068;
+            transform: scale(1.1);
+        }
+        
+        /* 游戏结束弹窗 */
         #gameOver {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(93, 64, 55, 0.95);
+            background-color: rgba(93, 64, 55, 0.98);
             color: #f5efe0;
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #8a3a31;
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #8a3a31;
             display: none;
             z-index: 1000;
+            min-width: 350px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-out;
         }
         
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        #gameOver h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #f5efe0;
+        }
+        
+        #gameOver p {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        /* 输入框样式 */
         #nameInput {
-            padding: 8px;
-            margin: 10px 0;
-            border-radius: 4px;
-            border: 1px solid #5d4037;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 2px solid #8a3a31;
+            font-size: 16px;
+            width: 100%;
+            max-width: 300px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        
+        #nameInput:focus {
+            border-color: #b35e58;
+            box-shadow: 0 0 0 3px rgba(179, 94, 88, 0.2);
         }
         
         /* 排行榜样式 */
         .leaderboard {
             background-color: #f5efe0;
-            border: 2px solid #8a3a31;
-            border-radius: 8px;
-            padding: 15px;
-            width: 250px;
-            max-height: 400px;
+            border: 3px solid #8a3a31;
+            border-radius: 12px;
+            padding: 20px;
+            width: 300px;
+            min-height: 350px; /* 确保即使没有数据也有足够高度 */
+            max-height: 500px;
             overflow-y: auto;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         
         .leaderboard h2 {
             color: #8a3a31;
             margin-top: 0;
-            font-size: 18px;
+            margin-bottom: 20px;
+            font-size: 22px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .leaderboard h2::after {
+            content: '';
+            display: block;
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #8a3a31, transparent);
+            margin: 10px auto 0;
         }
         
         .leaderboard-list {
@@ -117,59 +266,85 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             background-color: #f9f2e8;
-            border-radius: 4px;
-            font-size: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 空数据项样式 */
+        .empty-item {
+            opacity: 0.5;
+            background-color: #f0e8d8 !important;
+        }
+        
+        .empty-item:first-child .leaderboard-name {
+            font-style: italic;
+            text-align: center;
         }
         
         .leaderboard-rank {
             font-weight: bold;
-            width: 30px;
+            width: 35px;
             text-align: center;
+            font-size: 18px;
         }
         
         .leaderboard-name {
             flex: 1;
             text-align: left;
-            margin: 0 10px;
+            margin: 0 12px;
+            font-weight: 500;
         }
         
         .leaderboard-score {
             font-weight: bold;
             color: #8a3a31;
+            font-size: 18px;
         }
         
         /* 前三名奖牌样式 */
         .rank-gold .leaderboard-rank {
             color: #FFD700;
-            font-size: 18px;
+            font-size: 22px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
         
         .rank-silver .leaderboard-rank {
             color: #C0C0C0;
-            font-size: 18px;
+            font-size: 22px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
         
         .rank-bronze .leaderboard-rank {
             color: #CD7F32;
-            font-size: 18px;
+            font-size: 22px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
         
         .rank-gold {
             background-color: #fff8e1 !important;
-            border: 1px solid #FFD700;
+            border: 2px solid #FFD700;
+            transform: scale(1.03);
         }
         
         .rank-silver {
             background-color: #f5f5f5 !important;
-            border: 1px solid #C0C0C0;
+            border: 2px solid #C0C0C0;
+            transform: scale(1.01);
         }
         
         .rank-bronze {
             background-color: #fff3e0 !important;
-            border: 1px solid #CD7F32;
+            border: 2px solid #CD7F32;
         }
         
         /* 遮罩层 */
@@ -179,9 +354,69 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             display: none;
             z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .game-container {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 30px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .game-main {
+                width: 100%;
+                max-width: 450px;
+            }
+            
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+            
+            .leaderboard {
+                width: 100%;
+                max-width: 450px;
+            }
+            
+            .direction-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+        
+        /* 滚动条样式 */
+        .leaderboard::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .leaderboard::-webkit-scrollbar-track {
+            background: #f1e8d8;
+            border-radius: 4px;
+        }
+        
+        .leaderboard::-webkit-scrollbar-thumb {
+            background: #b35e58;
+            border-radius: 4px;
+        }
+        
+        .leaderboard::-webkit-scrollbar-thumb:hover {
+            background: #8a3a31;
         }
     </style>
 </head>
@@ -189,24 +424,7 @@
     <h1>风夏贪吃蛇</h1>
     
     <div class="game-container">
-        <div class="game-main">
-            <div class="game-info">
-                得分: <span id="score">0</span> | 最高分: <span id="highScore">0</span>
-            </div>
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-            
-            <div class="controls">
-                <button id="startBtn">开始游戏</button>
-                <button id="resetBtn">重置游戏</button>
-                <br><br>
-                <button class="direction-btn" id="upBtn">↑</button>
-                <br>
-                <button class="direction-btn" id="leftBtn">←</button>
-                <button class="direction-btn" id="downBtn">↓</button>
-                <button class="direction-btn" id="rightBtn">→</button>
-            </div>
-        </div>
-        
+        <!-- 排行榜放在左边 -->
         <div class="leaderboard">
             <h2>🏆 排行榜 🏆</h2>
             <ul id="leaderboardList" class="leaderboard-list">
@@ -214,6 +432,29 @@
                     <span class="leaderboard-rank">加载中...</span>
                 </li>
             </ul>
+        </div>
+        
+        <!-- 游戏主区域（只保留画布和分数） -->
+        <div class="game-main">
+            <div class="game-info">
+                得分: <span id="score">0</span> | 最高分: <span id="highScore">0</span>
+            </div>
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+        </div>
+        
+        <!-- 控制按钮区域（开始、重置和方向按钮都放在右边） -->
+        <div class="control-panel">
+            <div class="main-controls">
+                <button id="startBtn">开始游戏</button>
+                <button id="resetBtn">重置游戏</button>
+            </div>
+            <div class="direction-controls">
+                <button class="direction-btn" id="upBtn">↑</button>
+                <br>
+                <button class="direction-btn" id="leftBtn">←</button>
+                <button class="direction-btn" id="downBtn">↓</button>
+                <button class="direction-btn" id="rightBtn">→</button>
+            </div>
         </div>
     </div>
     
@@ -481,16 +722,30 @@
                 timestamp: new Date().toISOString()
             });
             
+            // 对同名用户去重，只保留最高分
+            const uniqueScores = [];
+            const nameMap = new Map();
+            
+            scores.forEach(item => {
+                const existingItem = nameMap.get(item.name);
+                if (!existingItem || item.score > existingItem.score) {
+                    nameMap.set(item.name, item);
+                }
+            });
+            
+            // 将Map转换为数组
+            nameMap.forEach(item => uniqueScores.push(item));
+            
             // 按分数降序排序
-            scores.sort((a, b) => b.score - a.score);
+            uniqueScores.sort((a, b) => b.score - a.score);
             
             // 只保留前10名
-            scores = scores.slice(0, 10);
+            const topScores = uniqueScores.slice(0, 10);
             
             // 保存回localStorage
-            localStorage.setItem('snakeLeaderboard', JSON.stringify(scores));
+            localStorage.setItem('snakeLeaderboard', JSON.stringify(topScores));
             
-            return scores;
+            return topScores;
         }
         
         // 从本地存储加载分数
@@ -502,42 +757,43 @@
         }
         
         // 提交分数（优先尝试服务器，失败时使用本地存储）
-        function submitScore() {
-            const name = document.getElementById('nameInput').value.trim();
-            if (!name) {
-                alert('请输入你的名字！');
-                return;
-            }
-            
-            // 显示加载状态
-            const submitBtn = document.getElementById('submitScoreBtn');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '保存中...';
-            submitBtn.disabled = true;
-            
-            try {
-                // 直接使用本地存储保存分数
-                const updatedScores = saveScoreToLocal(name, score);
-                
-                // 显示成功消息
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-                
-                // 更新UI
-                document.getElementById('submitScoreBtn').style.display = 'none';
-                document.getElementById('restartBtn').style.display = 'inline';
-                
-                // 更新排行榜显示
-                renderLeaderboard(updatedScores);
-                
-                alert('成绩已成功保存！');
-            } catch (error) {
-                // 出错处理
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-                alert('保存失败: ' + error.message);
-            }
-        }
+function submitScore() {
+    const name = document.getElementById('nameInput').value.trim();
+    if (!name) {
+        alert('请输入你的名字！');
+        return;
+    }
+    
+    // 显示加载状态
+    const submitBtn = document.getElementById('submitScoreBtn');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = '保存中...';
+    submitBtn.disabled = true;
+    
+    try {
+        // 直接使用本地存储保存分数
+        const updatedScores = saveScoreToLocal(name, score);
+        
+        // 显示成功消息
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        
+        // 隐藏游戏结束界面和遮罩层
+        document.querySelector('.overlay').style.display = 'none';
+        gameOverElement.style.display = 'none';
+        
+        // 重置游戏状态，但不自动开始
+        resetGame();
+        
+        // 刷新排行榜显示
+        renderLeaderboard(updatedScores);
+    } catch (error) {
+        // 出错处理
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        alert('保存失败: ' + error.message);
+    }
+}
         
         // 加载排行榜数据
         function loadLeaderboard() {
@@ -559,10 +815,24 @@
             const leaderboardList = document.getElementById('leaderboardList');
             leaderboardList.innerHTML = '';
             
+            // 确保排行榜容器有最小高度
+            const leaderboardContainer = document.querySelector('.leaderboard');
+            
             if (scores.length === 0) {
-                leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-rank">暂无记录</span></li>';
+                // 为空数据创建多条占位记录，确保容器高度合适
+                const emptyItems = [];
+                for (let i = 0; i < 5; i++) {
+                    emptyItems.push(`<li class="leaderboard-item empty-item">
+                        <span class="leaderboard-rank"></span>
+                        <span class="leaderboard-name">${i === 0 ? '暂无记录' : ''}</span>
+                        <span class="leaderboard-score"></span>
+                    </li>`);
+                }
+                leaderboardList.innerHTML = emptyItems.join('');
                 return;
             }
+            
+            // 有数据时移除最小高度限制，让内容自适应
             
             // 最多显示10条记录
             scores.slice(0, 10).forEach((item, index) => {

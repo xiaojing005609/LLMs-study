@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清除贪吃蛇游戏排行榜数据</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #f9f2e8;
+            margin: 0;
+            padding: 50px 20px;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            color: #5d4037;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #f5efe0;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #8a3a31;
+            margin-bottom: 25px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #8a3a31;
+            color: #f5efe0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #a14a41;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(138, 58, 49, 0.4);
+        }
+        .message {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background-color: #e8f5e8;
+            color: #388e3c;
+            border: 1px solid #c8e6c9;
+        }
+        .link {
+            margin-top: 30px;
+        }
+        .link a {
+            color: #8a3a31;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .link a:hover {
+            color: #a14a41;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>清除贪吃蛇游戏排行榜数据</h1>
+        <p>点击下方按钮将清除浏览器中存储的所有排行榜数据</p>
+        <button id="clearBtn">清除排行榜数据</button>
+        <div id="message" class="message success"></div>
+        <div class="link">
+            <a href="snake_game.html">返回游戏</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            // 清除排行榜数据
+            localStorage.removeItem('snakeLeaderboard');
+            
+            // 显示成功消息
+            const message = document.getElementById('message');
+            message.textContent = '排行榜数据已成功清除！';
+            message.style.display = 'block';
+            
+            // 3秒后隐藏消息
+            setTimeout(function() {
+                message.style.display = 'none';
+            }, 3000);
+        });
+        
+        // 页面加载时检查是否有排行榜数据
+        window.addEventListener('load', function() {
+            const scores = localStorage.getItem('snakeLeaderboard');
+            if (scores) {
+                try {
+                    const parsedScores = JSON.parse(scores);
+                    if (parsedScores && parsedScores.length > 0) {
+                        document.querySelector('p').textContent = `当前有 ${parsedScores.length} 条排行榜记录，点击按钮可清除所有数据`;
+                    }
+                } catch (e) {
+                    console.error('解析排行榜数据时出错:', e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
