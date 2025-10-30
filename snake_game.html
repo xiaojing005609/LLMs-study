@@ -106,6 +106,45 @@
             min-width: 200px;
         }
         
+        /* 服务器配置区域 */
+        .server-config {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .server-config h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #8a3a31;
+        }
+        
+        .server-config input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .server-config button {
+            width: 100%;
+            padding: 8px;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .config-status {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #8a3a31;
+            text-align: center;
+        }
+        
         /* 按钮基础样式 */
         button {
             padding: 12px 24px;
@@ -492,6 +531,12 @@
         
         <!-- 控制按钮区域（开始、重置和方向按钮都放在右边） -->
         <div class="control-panel">
+            <div class="server-config">
+                <h3>服务器设置</h3>
+                <input type="text" id="serverUrlInput" placeholder="输入服务器地址，例如：http://您的IP:8080">
+                <button id="saveServerUrlBtn">保存服务器设置</button>
+                <div class="config-status" id="configStatus"></div>
+            </div>
             <div class="main-controls">
                 <button id="startBtn">开始游戏</button>
                 <button id="resetBtn">重置游戏</button>
@@ -810,7 +855,7 @@ function submitScore() {
     };
     
     // 尝试发送POST请求到服务器
-    fetch('/api/submit', {
+    fetch(config.getApiUrl('/api/submit'), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -889,6 +934,31 @@ function submitScore() {
     }
 }
         
+        // 配置管理
+        const config = {
+            // 获取服务器地址配置，默认使用当前域名
+            getServerUrl: function() {
+                const savedUrl = localStorage.getItem('snakeServerUrl');
+                return savedUrl || ''; // 空字符串表示使用相对路径
+            },
+            
+            // 保存服务器地址配置
+            setServerUrl: function(url) {
+                localStorage.setItem('snakeServerUrl', url);
+            },
+            
+            // 获取完整的API URL
+            getApiUrl: function(endpoint) {
+                const serverUrl = this.getServerUrl();
+                if (!serverUrl) {
+                    return endpoint; // 使用相对路径
+                }
+                // 确保URL格式正确（没有结尾的斜杠）
+                const cleanUrl = serverUrl.replace(/\/$/, '');
+                return `${cleanUrl}${endpoint}`;
+            }
+        };
+        
         // 从本地存储加载排行榜数据
         function loadLeaderboardFromLocalStorage() {
             try {
@@ -944,13 +1014,13 @@ function submitScore() {
                 const localScores = loadLeaderboardFromLocalStorage();
                 
                 // 同时尝试从服务器加载
-                fetch('/api/scores')
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        }
-                        throw new Error('服务器响应错误');
-                    })
+            fetch(config.getApiUrl('/api/scores'))
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('服务器响应错误');
+                })
                     .then(serverScores => {
                         // 如果服务器加载成功，使用服务器数据
                         processLeaderboardData(serverScores);
@@ -1021,10 +1091,43 @@ function submitScore() {
             setInterval(loadLeaderboard, 30000);
         }
 
+        // 初始化服务器设置界面
+        function initServerConfig() {
+            const serverUrlInput = document.getElementById('serverUrlInput');
+            const saveServerUrlBtn = document.getElementById('saveServerUrlBtn');
+            const configStatus = document.getElementById('configStatus');
+            
+            // 加载已保存的服务器地址
+            serverUrlInput.value = config.getServerUrl();
+            
+            // 保存按钮点击事件
+            saveServerUrlBtn.addEventListener('click', function() {
+                const url = serverUrlInput.value.trim();
+                
+                // 简单验证URL格式
+                if (url && !url.match(/^https?:\/\//)) {
+                    configStatus.textContent = '请输入有效的URL，以http://或https://开头';
+                    return;
+                }
+                
+                config.setServerUrl(url);
+                configStatus.textContent = '服务器设置已保存！';
+                
+                // 3秒后清除状态消息
+                setTimeout(() => {
+                    configStatus.textContent = '';
+                }, 3000);
+                
+                // 立即重新加载排行榜，测试连接
+                loadLeaderboard();
+            });
+        }
+        
         // 初始化
         highScoreElement.textContent = highScore;
         setupControls();
         initGame();
+        initServerConfig();
         startLeaderboardRefresh();
     </script>
 </body>
