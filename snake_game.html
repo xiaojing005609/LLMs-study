@@ -450,7 +450,13 @@
             
             startBtn.addEventListener('click', startGame);
             resetBtn.addEventListener('click', resetGame);
-            restartBtn.addEventListener('click', resetGame);
+            restartBtn.addEventListener('click', function() {
+                // 隐藏游戏结束界面和遮罩层
+                gameOverElement.style.display = 'none';
+                document.querySelector('.overlay').style.display = 'none';
+                // 重置游戏
+                resetGame();
+            });
             
             // 提交分数按钮事件
             document.getElementById('submitScoreBtn').addEventListener('click', submitScore);
@@ -541,27 +547,13 @@
                 // 从本地存储加载分数
                 const scores = loadScoresFromLocal();
                 
-                // 如果没有数据，添加一些示例数据
-                if (scores.length === 0) {
-                    const sampleScores = [
-                        { name: '小明', score: 150 },
-                        { name: '小红', score: 120 },
-                        { name: '小李', score: 90 },
-                        { name: '小张', score: 70 },
-                        { name: '小王', score: 50 }
-                    ];
-                    localStorage.setItem('snakeLeaderboard', JSON.stringify(sampleScores));
-                    renderLeaderboard(sampleScores);
-                } else {
-                    renderLeaderboard(scores);
-                }
+                // 直接渲染排行榜，不添加默认数据
+                renderLeaderboard(scores);
             } catch (error) {
                 console.error('加载排行榜失败:', error);
                 leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-rank">加载失败</span></li>';
             }
         }
-        }
-        
         // 渲染排行榜
         function renderLeaderboard(scores) {
             const leaderboardList = document.getElementById('leaderboardList');
