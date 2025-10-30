@@ -10,11 +10,26 @@
             background-color: #f9f2e8;
             margin: 0;
             padding: 20px;
+            font-family: Arial, sans-serif;
         }
         
         h1 {
             color: #8a3a31;
             margin-bottom: 20px;
+        }
+        
+        .game-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 0 auto;
+            max-width: 900px;
+        }
+        
+        .game-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .game-info {
@@ -43,6 +58,10 @@
             cursor: pointer;
         }
         
+        button:hover {
+            background-color: #a14a41;
+        }
+        
         .direction-btn {
             width: 60px;
             height: 60px;
@@ -61,31 +80,152 @@
             border-radius: 8px;
             border: 2px solid #8a3a31;
             display: none;
+            z-index: 1000;
+        }
+        
+        #nameInput {
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #5d4037;
+        }
+        
+        /* 排行榜样式 */
+        .leaderboard {
+            background-color: #f5efe0;
+            border: 2px solid #8a3a31;
+            border-radius: 8px;
+            padding: 15px;
+            width: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .leaderboard h2 {
+            color: #8a3a31;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            margin: 5px 0;
+            background-color: #f9f2e8;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .leaderboard-rank {
+            font-weight: bold;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .leaderboard-name {
+            flex: 1;
+            text-align: left;
+            margin: 0 10px;
+        }
+        
+        .leaderboard-score {
+            font-weight: bold;
+            color: #8a3a31;
+        }
+        
+        /* 前三名奖牌样式 */
+        .rank-gold .leaderboard-rank {
+            color: #FFD700;
+            font-size: 18px;
+        }
+        
+        .rank-silver .leaderboard-rank {
+            color: #C0C0C0;
+            font-size: 18px;
+        }
+        
+        .rank-bronze .leaderboard-rank {
+            color: #CD7F32;
+            font-size: 18px;
+        }
+        
+        .rank-gold {
+            background-color: #fff8e1 !important;
+            border: 1px solid #FFD700;
+        }
+        
+        .rank-silver {
+            background-color: #f5f5f5 !important;
+            border: 1px solid #C0C0C0;
+        }
+        
+        .rank-bronze {
+            background-color: #fff3e0 !important;
+            border: 1px solid #CD7F32;
+        }
+        
+        /* 遮罩层 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
         }
     </style>
 </head>
 <body>
     <h1>风夏贪吃蛇</h1>
-    <div class="game-info">
-        得分: <span id="score">0</span> | 最高分: <span id="highScore">0</span>
-    </div>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
     
-    <div class="controls">
-        <button id="startBtn">开始游戏</button>
-        <button id="resetBtn">重置游戏</button>
-        <br><br>
-        <button class="direction-btn" id="upBtn">↑</button>
-        <br>
-        <button class="direction-btn" id="leftBtn">←</button>
-        <button class="direction-btn" id="downBtn">↓</button>
-        <button class="direction-btn" id="rightBtn">→</button>
+    <div class="game-container">
+        <div class="game-main">
+            <div class="game-info">
+                得分: <span id="score">0</span> | 最高分: <span id="highScore">0</span>
+            </div>
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <div class="controls">
+                <button id="startBtn">开始游戏</button>
+                <button id="resetBtn">重置游戏</button>
+                <br><br>
+                <button class="direction-btn" id="upBtn">↑</button>
+                <br>
+                <button class="direction-btn" id="leftBtn">←</button>
+                <button class="direction-btn" id="downBtn">↓</button>
+                <button class="direction-btn" id="rightBtn">→</button>
+            </div>
+        </div>
+        
+        <div class="leaderboard">
+            <h2>🏆 排行榜 🏆</h2>
+            <ul id="leaderboardList" class="leaderboard-list">
+                <li class="leaderboard-item">
+                    <span class="leaderboard-rank">加载中...</span>
+                </li>
+            </ul>
+        </div>
     </div>
+    
+    <div class="overlay"></div>
     
     <div id="gameOver">
         <h2>游戏结束</h2>
         <p>你的得分: <span id="finalScore">0</span></p>
-        <button id="restartBtn">再来一局</button>
+        <p>输入名字记录你的成绩:</p>
+        <input type="text" id="nameInput" placeholder="请输入你的名字" maxlength="20">
+        <button id="submitScoreBtn">提交成绩</button>
+        <button id="restartBtn" style="display: none;">再来一局</button>
     </div>
 
     <script>
@@ -240,7 +380,13 @@
             
             // 显示游戏结束界面
             finalScoreElement.textContent = score;
+            document.querySelector('.overlay').style.display = 'block';
             gameOverElement.style.display = 'block';
+            
+            // 重置游戏结束界面状态
+            document.getElementById('nameInput').value = '';
+            document.getElementById('submitScoreBtn').style.display = 'inline';
+            document.getElementById('restartBtn').style.display = 'none';
         }
 
         // 开始游戏
@@ -305,12 +451,163 @@
             startBtn.addEventListener('click', startGame);
             resetBtn.addEventListener('click', resetGame);
             restartBtn.addEventListener('click', resetGame);
+            
+            // 提交分数按钮事件
+            document.getElementById('submitScoreBtn').addEventListener('click', submitScore);
+            
+            // 按Enter键提交分数
+            document.getElementById('nameInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitScore();
+                }
+            });
+        }
+        
+        // 保存分数到本地存储
+        function saveScoreToLocal(name, score) {
+            // 从localStorage获取现有分数
+            let scores = JSON.parse(localStorage.getItem('snakeLeaderboard')) || [];
+            
+            // 添加新分数
+            scores.push({
+                name: name,
+                score: score,
+                timestamp: new Date().toISOString()
+            });
+            
+            // 按分数降序排序
+            scores.sort((a, b) => b.score - a.score);
+            
+            // 只保留前10名
+            scores = scores.slice(0, 10);
+            
+            // 保存回localStorage
+            localStorage.setItem('snakeLeaderboard', JSON.stringify(scores));
+            
+            return scores;
+        }
+        
+        // 从本地存储加载分数
+        function loadScoresFromLocal() {
+            let scores = JSON.parse(localStorage.getItem('snakeLeaderboard')) || [];
+            // 确保按分数降序排序
+            scores.sort((a, b) => b.score - a.score);
+            return scores;
+        }
+        
+        // 提交分数（优先尝试服务器，失败时使用本地存储）
+        function submitScore() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) {
+                alert('请输入你的名字！');
+                return;
+            }
+            
+            // 显示加载状态
+            const submitBtn = document.getElementById('submitScoreBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '保存中...';
+            submitBtn.disabled = true;
+            
+            try {
+                // 直接使用本地存储保存分数
+                const updatedScores = saveScoreToLocal(name, score);
+                
+                // 显示成功消息
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                
+                // 更新UI
+                document.getElementById('submitScoreBtn').style.display = 'none';
+                document.getElementById('restartBtn').style.display = 'inline';
+                
+                // 更新排行榜显示
+                renderLeaderboard(updatedScores);
+                
+                alert('成绩已成功保存！');
+            } catch (error) {
+                // 出错处理
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                alert('保存失败: ' + error.message);
+            }
+        }
+        
+        // 加载排行榜数据
+        function loadLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            try {
+                // 从本地存储加载分数
+                const scores = loadScoresFromLocal();
+                
+                // 如果没有数据，添加一些示例数据
+                if (scores.length === 0) {
+                    const sampleScores = [
+                        { name: '小明', score: 150 },
+                        { name: '小红', score: 120 },
+                        { name: '小李', score: 90 },
+                        { name: '小张', score: 70 },
+                        { name: '小王', score: 50 }
+                    ];
+                    localStorage.setItem('snakeLeaderboard', JSON.stringify(sampleScores));
+                    renderLeaderboard(sampleScores);
+                } else {
+                    renderLeaderboard(scores);
+                }
+            } catch (error) {
+                console.error('加载排行榜失败:', error);
+                leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-rank">加载失败</span></li>';
+            }
+        }
+        }
+        
+        // 渲染排行榜
+        function renderLeaderboard(scores) {
+            const leaderboardList = document.getElementById('leaderboardList');
+            leaderboardList.innerHTML = '';
+            
+            if (scores.length === 0) {
+                leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-rank">暂无记录</span></li>';
+                return;
+            }
+            
+            // 最多显示10条记录
+            scores.slice(0, 10).forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'leaderboard-item';
+                
+                // 为前三名添加奖牌样式
+                if (index === 0) {
+                    li.classList.add('rank-gold');
+                } else if (index === 1) {
+                    li.classList.add('rank-silver');
+                } else if (index === 2) {
+                    li.classList.add('rank-bronze');
+                }
+                
+                // 添加排名、名字和分数
+                li.innerHTML = `
+                    <span class="leaderboard-rank">${index + 1}</span>
+                    <span class="leaderboard-name">${item.name}</span>
+                    <span class="leaderboard-score">${item.score}</span>
+                `;
+                
+                leaderboardList.appendChild(li);
+            });
+        }
+        
+        // 定期刷新排行榜（每30秒）
+        function startLeaderboardRefresh() {
+            loadLeaderboard(); // 立即加载一次
+            setInterval(loadLeaderboard, 30000);
         }
 
         // 初始化
         highScoreElement.textContent = highScore;
         setupControls();
         initGame();
+        startLeaderboardRefresh();
     </script>
 </body>
 </html>
